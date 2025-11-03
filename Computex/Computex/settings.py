@@ -95,14 +95,13 @@ WSGI_APPLICATION = "Computex.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "recipe",
-        "USER": "admin",
-        "PASSWORD": "12345",
-        "HOST": "35.239.133.133",
-        "PORT": "5432"
+        "NAME": "computex_db",
+        "USER": "computex_user",
+        "PASSWORD": "computex_pass",
+        "HOST": "db",
+        "PORT": "5432",
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

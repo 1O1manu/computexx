@@ -1,8 +1,56 @@
 version: '3.9'
 
 services:
+  # 🐘 PostgreSQL database
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: computex_db
+      POSTGRES_USER: computex_user
+      POSTGRES_PASSWORD: computex_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # 🐍 Django Backend
   backend:
-    container_name: django-app
-    build: ./Computex
+    build:
+      context: ./Computex
+    container_name: django_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./Computex:/code
     ports:
       - "8000:8000"
+    environment:
+    - DEBUG=1
+    - SECRET_KEY=your_secret_key_here
+    - ALLOWED_HOSTS=*
+    - DATABASE_NAME=computex_db       
+    - DATABASE_USER=computex_user     
+    - DATABASE_PASSWORD=computex_pass 
+    - DATABASE_HOST=db                
+    - DATABASE_PORT=5432
+
+    depends_on:
+      - db
+
+  # 🌐 Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./ComputexFrontend
+    container_name: react_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
+
