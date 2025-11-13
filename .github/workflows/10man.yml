@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: npm install
       working-directory: ./ComputexFrontend
-      
+
     - name: Deploy to EC2 with Git
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -44,7 +44,7 @@ jobs:
             cd computexx && git pull origin main
           fi
 
-          cd computexx
+          cd computexx/ComputexFrontend
           npm install
           npm start &
         EOF
