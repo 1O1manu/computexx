@@ -19,32 +19,32 @@ jobs:
     - name: Install dependencies
       run: npm install
       working-directory: ./ComputexFrontend
-
+       
     - name: Deploy to EC2 with Git
-      env:
-        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        EC2_USER: ${{ secrets.EC2_USER }}
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "$EC2_SSH_KEY" > key.pem
-        chmod 600 key.pem
+  env:
+    EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+    EC2_USER: ${{ secrets.EC2_USER }}
+    EC2_HOST: ${{ secrets.EC2_HOST }}
+  run: |
+    echo "$EC2_SSH_KEY" > key.pem
+    chmod 600 key.pem
 
-        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
-          # Install Node.js and npm if missing
-          if ! command -v npm &> /dev/null
-          then
-            sudo apt update
-            sudo apt install -y nodejs npm
-          fi
+    ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
 
-          # Clone or update the computexx repo
-          if [ ! -d "computexx" ]; then
-            git clone https://github.com/1O1manu/computexx.git
-          else
-            cd computexx && git pull origin main
-          fi
+      # Clone or update repo
+      if [ ! -d "computexx" ]; then
+        git clone https://github.com/1O1manu/computexx.git
+      else
+        cd computexx && git pull origin main
+      fi
 
-          cd ComputexFrontend
-          npm install
-          npm start &
-        EOF
+      # Go to frontend folder
+      cd computexx/ComputexFrontend
+
+      # Install dependencies
+      npm install --production
+
+      # Start server in background
+      npm start &
+
+    EOF
