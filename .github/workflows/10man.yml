@@ -44,7 +44,7 @@ jobs:
             cd computexx && git pull origin main
           fi
 
-          cd computexx/ComputexFrontend
+          cd ComputexFrontend
           npm install
           npm start &
         EOF
