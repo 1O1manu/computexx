@@ -1,61 +1,46 @@
-name: Computexx Frontend
+name: Frontend Deployment
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20.x
+      - name: Deploy to EC2
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          echo "$EC2_SSH_KEY" > key.pem
+          chmod 600 key.pem
 
-    # --------------------------
-    # No build since it's a Node.js server
-    # --------------------------
+          ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
+            # Install Node.js, npm, and git if missing
+            if ! command -v npm &> /dev/null; then
+              sudo apt update
+              sudo apt install -y nodejs npm git
+            fi
 
-    - name: Deploy to EC2 with Git
-      env:
-        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        EC2_USER: ${{ secrets.EC2_USER }}
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "$EC2_SSH_KEY" > key.pem
-        chmod 600 key.pem
+            # Clone or update repo
+            if [ ! -d "computexx" ]; then
+              git clone https://github.com/1O1manu/computexx.git
+            else
+              cd computexx
+              git fetch origin
+              git reset --hard origin/main
+            fi
 
-        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
-          
-          # Install Node & PM2 if missing
-          if ! command -v npm &> /dev/null; then
-            sudo apt update
-            sudo apt install -y nodejs npm
-          fi
+            # Navigate to frontend folder
+            cd computexx/ComputexFrontend  # <-- make sure this path matches your repo
 
-          if ! command -v pm2 &> /dev/null; then
-            sudo npm install -g pm2
-          fi
-
-          # Clone or update the repo
-          if [ ! -d "computexx" ]; then
-            git clone https://github.com/1O1manu/computexx.git
-          else
-            cd computexx && git pull origin main
-          fi
-
-          # Move into Node server directory
-          cd computexx/ComputexFrontend
-
-          # Install dependencies
-          npm install --production
-
-          # Restart backend with PM2
-          pm2 restart computex-frontend || pm2 start npm --name computex-frontend -- start
-
-        EOF
+            # Install dependencies and start app
+            npm install
+            nohup npm start -- --host 0.0.0.0 &
+          EOF
