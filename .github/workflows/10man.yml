@@ -1,4 +1,4 @@
-name: Node.js CI & Deploy
+name: Frontend Deployment
 
 on:
   push:
@@ -16,8 +16,11 @@ jobs:
       with:
         node-version: 20.x
 
-    - name: Install dependencies
-      run: npm install
+    - name: Install frontend dependencies
+  run: |
+    cd ComputexFrontend
+    npm install
+
 
     - name: Deploy to EC2 with Git
       env:
