@@ -17,9 +17,9 @@ jobs:
         node-version: 20.x
 
     - name: Install frontend dependencies
-  run: |
-    cd ComputexFrontend
-    npm install
+      run: |
+       cd ComputexFrontend
+       npm install
 
 
     - name: Deploy to EC2 with Git
