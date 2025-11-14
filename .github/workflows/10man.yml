@@ -9,38 +9,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Deploy to EC2
-        env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-          echo "$EC2_SSH_KEY" > key.pem
-          chmod 600 key.pem
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
 
-          ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            # Install Node.js, npm, and git if missing
-            if ! command -v npm &> /dev/null; then
-              sudo apt update
-              sudo apt install -y nodejs npm git
-            fi
+    - name: Deploy to EC2
+      env:
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        EC2_USER: ${{ secrets.EC2_USER }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        # Save the SSH key
+        echo "$EC2_SSH_KEY" > key.pem
+        chmod 600 key.pem
 
-            # Clone or update repo
-            if [ ! -d "computexx" ]; then
-              git clone https://github.com/1O1manu/computexx.git
-            else
-              cd computexx
-              git fetch origin
-              git reset --hard origin/main
-            fi
+        # SSH into EC2 and deploy
+        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
+          # Clone or update repo
+          if [ ! -d "computexx" ]; then
+            git clone https://github.com/1O1manu/computexx.git
+          else
+            cd computexx
+            git fetch --all
+            git reset --hard origin/main
+          fi
 
-            # Navigate to frontend folder
-            cd computexx/ComputexFrontend  # <-- make sure this path matches your repo
+          # Change to the correct folder containing package.json
+          cd computexx/ComputexFrontend
 
-            # Install dependencies and start app
-            npm install
-            nohup npm start -- --host 0.0.0.0 &
-          EOF
+          # Install dependencies
+          npm install
+
+          # Run the app in the background, accessible on all interfaces
+          nohup npm start -- --host 0.0.0.0 &
+        EOF
