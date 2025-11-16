@@ -49,5 +49,4 @@ jobs:
 
             # Start app in background on all interfaces
             nohup npm start -- --host 0.0.0.0 > app.log 2>&1 &
-          EOF     
-
+          EOF
