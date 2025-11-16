@@ -29,21 +29,25 @@ jobs:
               sudo apt install -y nodejs npm
             fi
 
-            # Clone repo if not exists, otherwise pull latest changes
+            # Clone repo if it doesn't exist
             if [ ! -d "computexx" ]; then
               git clone https://github.com/1O1manu/computexx.git
-            else
-              cd computexx
-              git reset --hard
-              git pull origin main
             fi
 
-            # Go into repo folder
-            cd computexx/ComputexFrontend
+            # Always enter repo folder
+            cd computexx
+
+            # Update repo
+            git reset --hard
+            git pull origin main
+
+            # Enter frontend folder
+            cd ComputexFrontend
 
             # Install dependencies
             npm install
 
             # Start app in background on all interfaces
             nohup npm start -- --host 0.0.0.0 > app.log 2>&1 &
-          EOF
+          EOF.      
+
