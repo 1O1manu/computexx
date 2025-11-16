@@ -21,32 +21,24 @@ jobs:
           echo "$EC2_SSH_KEY" > key.pem
           chmod 600 key.pem
 
-          ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST <<- 'EOF'
+          ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "
             # Install Node.js and npm if missing
-            if ! command -v npm &> /dev/null
-            then
+            if ! command -v npm >/dev/null 2>&1; then
               sudo apt update
               sudo apt install -y nodejs npm
             fi
 
-            # Clone repo if it doesn't exist
-            if [ ! -d "computexx" ]; then
+            # Clone repo if missing
+            if [ ! -d 'computexx' ]; then
               git clone https://github.com/1O1manu/computexx.git
             fi
 
-            # Always enter repo folder
             cd computexx
-
-            # Update repo
             git reset --hard
             git pull origin main
 
-            # Enter frontend folder
             cd ComputexFrontend
-
-            # Install dependencies
             npm install
 
-            # Start app in background on all interfaces
             nohup npm start -- --host 0.0.0.0 > app.log 2>&1 &
-          EOF
+          "
